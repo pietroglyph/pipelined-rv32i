@@ -1,13 +1,13 @@
 [*]
 [*] GTKWave Analyzer v3.3.113 (w)1999-2022 BSI
-[*] Mon Dec 19 09:45:51 2022
+[*] Mon Dec 19 10:05:25 2022
 [*]
 [dumpfile] "/home/declan/work/src/github.com/pietroglyph/pipelined-rv32i/rv32i_system.fst"
-[dumpfile_mtime] "Mon Dec 19 09:40:31 2022"
-[dumpfile_size] 10573
+[dumpfile_mtime] "Mon Dec 19 10:03:52 2022"
+[dumpfile_size] 14611
 [savefile] "/home/declan/work/src/github.com/pietroglyph/pipelined-rv32i/tests/rv32i_system.gtkw"
 [timestart] 0
-[size] 989 1007
+[size] 1920 1080
 [pos] -1 -1
 *-15.274161 25000 775000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] test_rv32i_system.
@@ -17,7 +17,7 @@
 [sst_width] 312
 [signals_width] 299
 [sst_expanded] 1
-[sst_vpaned_height] 340
+[sst_vpaned_height] 369
 @28
 test_rv32i_system.UUT.CORE.rst
 test_rv32i_system.UUT.CORE.clk
@@ -34,6 +34,18 @@ test_rv32i_system.UUT.CORE.funct3[2:0]
 test_rv32i_system.UUT.CORE.funct7[31:25]
 test_rv32i_system.UUT.CORE.zero_funct7
 test_rv32i_system.UUT.CORE.magic_funct7
+@200
+-
+@28
+test_rv32i_system.UUT.CORE.lw_stall
+test_rv32i_system.UUT.CORE.stall_d
+test_rv32i_system.UUT.CORE.stall_f
+@29
+test_rv32i_system.UUT.CORE.forward_src_a_e[1:0]
+@28
+test_rv32i_system.UUT.CORE.forward_src_b_e[1:0]
+test_rv32i_system.UUT.CORE.flush_d
+test_rv32i_system.UUT.CORE.flush_e
 @200
 -
 @28
@@ -73,5 +85,17 @@ test_rv32i_system.UUT.CORE.rd2_d[31:0]
 test_rv32i_system.UUT.CORE.rd2_e[31:0]
 @200
 -
+@24
+test_rv32i_system.UUT.CORE.rs1_d[4:0]
+test_rv32i_system.UUT.CORE.rs1_e[4:0]
+test_rv32i_system.UUT.CORE.rs2_d[4:0]
+test_rv32i_system.UUT.CORE.rs2_e[4:0]
+@200
+-
+@22
+test_rv32i_system.UUT.CORE.rd_addr_d[4:0]
+test_rv32i_system.UUT.CORE.rd_addr_e[4:0]
+test_rv32i_system.UUT.CORE.rd_addr_m[4:0]
+test_rv32i_system.UUT.CORE.rd_addr_w[4:0]
 [pattern_trace] 1
 [pattern_trace] 0
