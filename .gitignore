@@ -9,3 +9,5 @@
 .hdl_checker/
 __pycache__/
 *.vim
+*.memh
+*.out
