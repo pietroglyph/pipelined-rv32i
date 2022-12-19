@@ -1,6 +1,9 @@
 # Pipelined RISC-V CPU
 This is a pipelined RISC-V CPU written in SystemVerilog; it implements most of the RV32I ISA (that is, the RV32I base integer instruction set with no extensions). This implementation has a five-stage pipeline with a hazard unit that can forward data, stall the pipeline, and flush the pipeline in the case of a branch misprediction.
 
+## Project Goals
+The goal of this project was to implement a pipelined RISC-V CPU in SystemVerilog.
+
 ## Pipeline Architecture
 This implementation divides a simple single-cycle Harvard architecture RV32I CPU into five pipeline stages:
  1. Fetch - read the instruction memory and increment the program counter (unless we have an instruction that jumps in the pipeline, in which case we assume we take the branch and set the program counter appropriately)
