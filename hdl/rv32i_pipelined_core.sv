@@ -10,7 +10,7 @@ module rv32i_pipelined_core(
   PC, instructions_completed
 );
 
-parameter pc_f_START_ADDRESS=0;
+parameter PC_START_ADDRESS=0;
 
 typedef enum logic [1:0] {
 	RESULT_ALU,
@@ -69,8 +69,8 @@ always_comb begin : hazard_unit
 	// (Control hazards)	
 
 	// A branch was taken or a load put us in a bubble
-	flush_d = pc_src_e;
-	flush_e = lw_stall | pc_src_e;
+	flush_d = pc_src_e === PC_SRC_JUMP_TARGET;
+	flush_e = lw_stall | (pc_src_e === PC_SRC_JUMP_TARGET);
 end
 
 // [Fetch]
@@ -83,7 +83,7 @@ wire [31:0] pc_f;
 logic [31:0] pc_next_f, pc_plus_4_f, instr_f;
 
 always_ff @(posedge clk) begin : fetch_to_decode_reg
-	if (flush_d) begin
+	if (flush_d | rst) begin
 		instr_d <= 0;
 		pc_d <= 0;
 		pc_plus_4_d <= 0;
@@ -97,8 +97,8 @@ always_ff @(posedge clk) begin : fetch_to_decode_reg
 end
 
 // Combinational logic
-register #(.N(32), .RESET(pc_f_START_ADDRESS)) PC_REGISTER (
-  .clk(clk), .rst(rst), .ena(stall_f), .d(pc_next_f), .q(pc_f)
+register #(.N(32), .RESET(PC_START_ADDRESS)) PC_REGISTER (
+  .clk(clk), .rst(rst), .ena(~stall_f), .d(pc_next_f), .q(pc_f)
 );
 
 always_comb begin : fetch_datapath
@@ -110,6 +110,9 @@ always_comb begin : fetch_datapath
 		PC_SRC_PLUS_FOUR: pc_next_f = pc_plus_4_f;
 		PC_SRC_JUMP_TARGET: pc_next_f = pc_target_e;
 	endcase
+
+	inst_mem_addr = pc_f;
+	instr_f = inst_mem_rd_data;
 end
 
 // [Decode]
@@ -126,12 +129,13 @@ alu_src_t alu_src_d;
 logic stall_d, flush_d;
 
 always_ff @(posedge clk) begin : decode_to_execute_reg
-	if (flush_e) begin
+	if (flush_e | rst) begin
 		rd1_e <= 0;
 		rd2_e <= 0;
 		pc_e <= 0;
 		rs1_e <= 0;
 		rs2_e <= 0;
+		rd_addr_e <= 0;
 		imm_ext_e <= 0;
 		pc_plus_4_e <= 0;
 
@@ -148,6 +152,7 @@ always_ff @(posedge clk) begin : decode_to_execute_reg
 		pc_e <= pc_d;
 		rs1_e <= rs1_d;
 		rs2_e <= rs2_d;
+		rd_addr_e <= rd_addr_d;
 		imm_ext_e <= imm_ext_d;
 		pc_plus_4_e <= pc_plus_4_d;
 
@@ -164,7 +169,7 @@ end
 // Combinational logic
 register_file REGISTER_FILE(
   .clk(clk), 
-  .wr_ena(reg_write_w), .wr_addr(rd_addr_d), .wr_data(result_w),
+  .wr_ena(reg_write_w), .wr_addr(rd_addr_w), .wr_data(result_w),
   .rd_addr0(rs1_d), .rd_addr1(rs2_d),
   .rd_data0(rd1_d), .rd_data1(rd2_d)
 );
@@ -172,7 +177,6 @@ register_file REGISTER_FILE(
 logic [6:0] op;
 logic [2:0] funct3;
 logic [31:25] funct7;
-logic [31:0] imm_ext;
 enum logic [2:0] {IMM_EXT_SRC_I_TYPE, IMM_EXT_SRC_S_TYPE, IMM_EXT_SRC_B_TYPE, IMM_EXT_SRC_J_TYPE, IMM_EXT_SRC_U_TYPE, IMM_EXT_INVALID} imm_ext_src;
 always_comb begin : decode_unit
 	op = instr_d[6:0];
@@ -197,14 +201,14 @@ always_comb begin : decode_unit
 		IMM_EXT_SRC_I_TYPE: case (funct3)
 			// sll and sra/srl have an effective funct7 in the
 			// immediate which we don't want.
-			FUNCT3_SLL, FUNCT3_SHIFT_RIGHT: imm_ext = {27'b0, instr_d[24:20]};
-			default: imm_ext = {{20{instr_d[31]}}, instr_d[31:20]};
+			FUNCT3_SLL, FUNCT3_SHIFT_RIGHT: imm_ext_d = {27'b0, instr_d[24:20]};
+			default: imm_ext_d = {{20{instr_d[31]}}, instr_d[31:20]};
 		endcase
-		IMM_EXT_SRC_S_TYPE: imm_ext = {{20{instr_d[31]}}, instr_d[31:25], instr_d[11:7]};
-		IMM_EXT_SRC_B_TYPE: imm_ext = {{20{instr_d[31]}}, instr_d[7], instr_d[30:25], instr_d[11:8], 1'b0};
-		IMM_EXT_SRC_J_TYPE: imm_ext = {{12{instr_d[31]}}, instr_d[19:12], instr_d[20], instr_d[30:21], 1'b0};
-		IMM_EXT_SRC_U_TYPE: imm_ext = {instr_d[31:12], 12'b0};
-		default: imm_ext = 32'b0;
+		IMM_EXT_SRC_S_TYPE: imm_ext_d = {{20{instr_d[31]}}, instr_d[31:25], instr_d[11:7]};
+		IMM_EXT_SRC_B_TYPE: imm_ext_d = {{20{instr_d[31]}}, instr_d[7], instr_d[30:25], instr_d[11:8], 1'b0};
+		IMM_EXT_SRC_J_TYPE: imm_ext_d = {{12{instr_d[31]}}, instr_d[19:12], instr_d[20], instr_d[30:21], 1'b0};
+		IMM_EXT_SRC_U_TYPE: imm_ext_d = {instr_d[31:12], 12'b0};
+		default: imm_ext_d = 32'b0;
 	endcase
 end
 
@@ -232,6 +236,13 @@ always_comb begin : control_unit
 		default: jump_d = 1'b0;
 	endcase
 	branch_d = op === OP_BTYPE;
+
+	// Controls the result mux
+	case (op)
+		OP_JAL, OP_JALR: result_src_d = RESULT_PC_PLUS_FOUR;
+		OP_LTYPE: result_src_d = RESULT_MEM_RD;
+		default: result_src_d = RESULT_ALU;
+	endcase
 
 	// Controls the ALU control input
 	// XXX: The instructions that use funct7 to
@@ -290,14 +301,24 @@ pc_src_t pc_src_e;
 logic flush_e;
 
 always_ff @(posedge clk) begin : execute_to_memory_reg
-	alu_result_m <= alu_result_e;
-	write_data_m <= alu_result_e;	
-	rd_addr_m <= rd_addr_e;
-	pc_plus_4_m <= pc_plus_4_e;
+	if (rst) begin
+		alu_result_m <= 0;
+		write_data_m <= 0;
+		rd_addr_m <= 0;
 
-	reg_write_m <= reg_write_e;
-	result_src_m <= result_src_e;
-	mem_write_m <= mem_write_e;
+		reg_write_m <= 0;
+		result_src_e <= RESULT_ALU;
+		mem_write_m <= 0;
+	end else begin
+		alu_result_m <= alu_result_e;
+		write_data_m <= write_data_e;
+		rd_addr_m <= rd_addr_e;
+		pc_plus_4_m <= pc_plus_4_e;
+
+		reg_write_m <= reg_write_e;
+		result_src_m <= result_src_e;
+		mem_write_m <= mem_write_e;
+	end
 end
 
 // Combinational logic
@@ -322,7 +343,7 @@ always_comb begin : execute_datapath
 		default: src_b = 32'b0;
 	endcase
 
-	pc_src_e = (jump_e | (branch_e & zero_e)) === 1'b0 ? PC_SRC_JUMP_TARGET : PC_SRC_PLUS_FOUR;
+	pc_src_e = (jump_e | (branch_e & zero_e)) === 1'b1 ? PC_SRC_JUMP_TARGET : PC_SRC_PLUS_FOUR;
 
 	pc_target_e = pc_e + imm_ext_e;	
 end
@@ -345,13 +366,23 @@ logic [31:0] alu_result_m, write_data_m, read_result_m, pc_plus_4_m;
 logic [4:0] rd_addr_m;
 
 always_ff @(posedge clk) begin : memory_to_writeback_reg
-	alu_result_w <= alu_result_m;
-	read_result_w <= read_result_m;
-	rd_addr_w <= rd_addr_m;
-	pc_plus_4_w <= pc_plus_4_m;
+	if (rst) begin
+		alu_result_w <= 0;
+		read_result_w <= 0;
+		rd_addr_w <= 0;
+		pc_plus_4_w <= 0;
 
-	reg_write_w <= reg_write_m;
-	result_src_w <= result_src_m;
+		reg_write_w <= 0;
+		result_src_w <= RESULT_ALU;
+	end else begin
+		alu_result_w <= alu_result_m;
+		read_result_w <= read_result_m;
+		rd_addr_w <= rd_addr_m;
+		pc_plus_4_w <= pc_plus_4_m;
+
+		reg_write_w <= reg_write_m;
+		result_src_w <= result_src_m;
+	end
 end
 
 // Combinational logic
