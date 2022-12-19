@@ -1,0 +1,124 @@
+[*]
+[*] GTKWave Analyzer v3.3.113 (w)1999-2022 BSI
+[*] Thu Dec 15 02:26:56 2022
+[*]
+[dumpfile] "/home/declan/work/src/github.com/pietroglyph/comparch22/labs/03_rv32i_part2/rv32i_system.fst"
+[dumpfile_mtime] "Thu Dec 15 02:16:35 2022"
+[dumpfile_size] 51800
+[savefile] "/home/declan/work/src/github.com/pietroglyph/comparch22/labs/03_rv32i_part2/tests/rv32i_system.gtkw"
+[timestart] 1641800
+[size] 1916 1007
+[pos] -1 -1
+*-15.274161 1780000 775000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] test_rv32i_system.
+[treeopen] test_rv32i_system.UUT.
+[treeopen] test_rv32i_system.UUT.CORE.
+[treeopen] test_rv32i_system.UUT.MMU.
+[sst_width] 312
+[signals_width] 539
+[sst_expanded] 1
+[sst_vpaned_height] 340
+@28
+test_rv32i_system.UUT.CORE.rst
+@29
+test_rv32i_system.UUT.CORE.clk
+@24
+test_rv32i_system.UUT.CORE.instructions_completed[31:0]
+@2028
+^1 /home/declan/work/src/github.com/pietroglyph/comparch22/labs/03_rv32i_part2/tests/rv32i_states.txt
+test_rv32i_system.UUT.CORE.state[3:0]
+@28
+test_rv32i_system.UUT.CORE.PC_ena
+@22
+test_rv32i_system.UUT.CORE.PC[31:0]
+test_rv32i_system.UUT.CORE.PC_next[31:0]
+test_rv32i_system.UUT.CORE.PC_old[31:0]
+@4022
+^>1 /home/declan/work/src/github.com/pietroglyph/comparch22/labs/03_rv32i_part2/gtkwave_filter.py
+test_rv32i_system.UUT.CORE.IR[31:0]
+@200
+-
+@28
+test_rv32i_system.UUT.CORE.op[6:0]
+test_rv32i_system.UUT.CORE.funct3[2:0]
+test_rv32i_system.UUT.CORE.funct7[31:25]
+test_rv32i_system.UUT.CORE.zero_funct7
+test_rv32i_system.UUT.CORE.magic_funct7
+@420
+test_rv32i_system.UUT.CORE.imm_ext[31:0]
+@200
+-
+@28
+test_rv32i_system.UUT.CORE.reg_write
+@24
+test_rv32i_system.UUT.CORE.rd[4:0]
+test_rv32i_system.UUT.CORE.rs1[4:0]
+test_rv32i_system.UUT.CORE.rs2[4:0]
+@22
+test_rv32i_system.UUT.CORE.reg_data1[31:0]
+test_rv32i_system.UUT.CORE.reg_data2[31:0]
+test_rv32i_system.UUT.CORE.reg_data1_old[31:0]
+test_rv32i_system.UUT.CORE.reg_data2_old[31:0]
+test_rv32i_system.UUT.CORE.rfile_wr_data[31:0]
+@200
+-
+@22
+test_rv32i_system.UUT.CORE.mem_addr[31:0]
+test_rv32i_system.UUT.CORE.mem_rd_data[31:0]
+test_rv32i_system.UUT.CORE.mem_rd_data_old[31:0]
+test_rv32i_system.UUT.CORE.mem_wr_data[31:0]
+@28
+test_rv32i_system.UUT.CORE.mem_wr_ena
+@200
+-
+@28
+test_rv32i_system.UUT.CORE.alu_control[3:0]
+@c00022
+test_rv32i_system.UUT.CORE.src_a[31:0]
+@28
+(0)test_rv32i_system.UUT.CORE.src_a[31:0]
+(1)test_rv32i_system.UUT.CORE.src_a[31:0]
+(2)test_rv32i_system.UUT.CORE.src_a[31:0]
+(3)test_rv32i_system.UUT.CORE.src_a[31:0]
+(4)test_rv32i_system.UUT.CORE.src_a[31:0]
+(5)test_rv32i_system.UUT.CORE.src_a[31:0]
+(6)test_rv32i_system.UUT.CORE.src_a[31:0]
+(7)test_rv32i_system.UUT.CORE.src_a[31:0]
+(8)test_rv32i_system.UUT.CORE.src_a[31:0]
+(9)test_rv32i_system.UUT.CORE.src_a[31:0]
+(10)test_rv32i_system.UUT.CORE.src_a[31:0]
+(11)test_rv32i_system.UUT.CORE.src_a[31:0]
+(12)test_rv32i_system.UUT.CORE.src_a[31:0]
+(13)test_rv32i_system.UUT.CORE.src_a[31:0]
+(14)test_rv32i_system.UUT.CORE.src_a[31:0]
+(15)test_rv32i_system.UUT.CORE.src_a[31:0]
+(16)test_rv32i_system.UUT.CORE.src_a[31:0]
+(17)test_rv32i_system.UUT.CORE.src_a[31:0]
+(18)test_rv32i_system.UUT.CORE.src_a[31:0]
+(19)test_rv32i_system.UUT.CORE.src_a[31:0]
+(20)test_rv32i_system.UUT.CORE.src_a[31:0]
+(21)test_rv32i_system.UUT.CORE.src_a[31:0]
+(22)test_rv32i_system.UUT.CORE.src_a[31:0]
+(23)test_rv32i_system.UUT.CORE.src_a[31:0]
+(24)test_rv32i_system.UUT.CORE.src_a[31:0]
+(25)test_rv32i_system.UUT.CORE.src_a[31:0]
+(26)test_rv32i_system.UUT.CORE.src_a[31:0]
+(27)test_rv32i_system.UUT.CORE.src_a[31:0]
+(28)test_rv32i_system.UUT.CORE.src_a[31:0]
+(29)test_rv32i_system.UUT.CORE.src_a[31:0]
+(30)test_rv32i_system.UUT.CORE.src_a[31:0]
+(31)test_rv32i_system.UUT.CORE.src_a[31:0]
+@1401200
+-group_end
+@420
+test_rv32i_system.UUT.CORE.src_b[31:0]
+@22
+test_rv32i_system.UUT.CORE.alu_result[31:0]
+test_rv32i_system.UUT.CORE.alu_result_old[31:0]
+@28
+test_rv32i_system.UUT.CORE.zero
+test_rv32i_system.UUT.CORE.equal
+@22
+test_rv32i_system.UUT.CORE.writeback_result[31:0]
+[pattern_trace] 1
+[pattern_trace] 0
