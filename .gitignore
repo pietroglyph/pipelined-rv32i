@@ -1,0 +1,11 @@
+*.jou
+*.zip
+*.log
+*.bin
+*.bit
+*.fst
+*.checkpoint
+.Xil/
+.hdl_checker/
+__pycache__/
+*.vim
