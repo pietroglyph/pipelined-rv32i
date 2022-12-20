@@ -1,11 +1,24 @@
 # Pipelined RISC-V CPU
 This is a pipelined RISC-V CPU written in SystemVerilog; it implements most of the RV32I ISA (that is, the RV32I base integer instruction set with no extensions). This implementation has a five-stage pipeline with a hazard unit that can forward data, stall the pipeline, and flush the pipeline in the case of a branch misprediction.
 
-## Project Goals
-The goal of this project was to implement a pipelined RISC-V CPU in SystemVerilog.
+## Basic Usage
+There are a variety of tests of varying complexity; you need Icarus Verilog installed to run them and (optionally) GTKWave to view the simulated results. Try running
+```bash
+ $ make test_rv32i_{} # where {} is one of ir_types, b_types, ls_types, functions, peripherals
+ $ make waves_rv32i_system # to view results
+```
+
+If you want to run this on an Artix 7 and you have Vivado installed then you can run
+```bash
+ $ make main.bit # make the bitstream (the program_fpga_* tasks depend on this so you can just run those if you want)
+ $ make program_fpga_vivado # or program_fpga_digilient if you have djtgcfg
+```
+
+## Instruction support
+This supports all RV32I instructions except for the half/byte loads and stores and the U-types (`lui` and `auipc`).
 
 ## Pipeline Architecture
-This implementation divides a simple single-cycle von Neumann* architecture RV32I CPU into five pipeline stages:
+This implementation divides a simple single-cycle von Neumann\* architecture RV32I CPU into five pipeline stages:
  1. Fetch - read the instruction memory and increment the program counter (unless we have an instruction that jumps in the pipeline, in which case we assume we take the branch and set the program counter appropriately)
  2. Decode - break the instruction we read in the last cycle into its components (based on the operand and possibly the `funct3` and `func7` fields), compute the control unit flags, extend the immediate, and on the negative edge of the clock read out the register based on the instruction we decoded on the positive clock edge
  3. Execute - feed the data we read from the register file OR forwarded data (from a previous instruction that's later along in the pipeline, in the case of a data hazard---see the Hazard Unit section for more) into the ALU, where the ALU control signal was computed in the decode stage
