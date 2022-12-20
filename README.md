@@ -5,7 +5,7 @@ This is a pipelined RISC-V CPU written in SystemVerilog; it implements most of t
 The goal of this project was to implement a pipelined RISC-V CPU in SystemVerilog.
 
 ## Pipeline Architecture
-This implementation divides a simple single-cycle Harvard architecture RV32I CPU into five pipeline stages:
+This implementation divides a simple single-cycle von Neumann* architecture RV32I CPU into five pipeline stages:
  1. Fetch - read the instruction memory and increment the program counter (unless we have an instruction that jumps in the pipeline, in which case we assume we take the branch and set the program counter appropriately)
  2. Decode - break the instruction we read in the last cycle into its components (based on the operand and possibly the `funct3` and `func7` fields), compute the control unit flags, extend the immediate, and on the negative edge of the clock read out the register based on the instruction we decoded on the positive clock edge
  3. Execute - feed the data we read from the register file OR forwarded data (from a previous instruction that's later along in the pipeline, in the case of a data hazard---see the Hazard Unit section for more) into the ALU, where the ALU control signal was computed in the decode stage
@@ -14,6 +14,8 @@ This implementation divides a simple single-cycle Harvard architecture RV32I CPU
 
 In practice, we store the state from each stage and pass it to the next stage on the rising edge of clock. To accomplish this we basically make a big shift register:
 ![Simplified structural diagram of a pipelined processor, emphasis on big registers connected together](docs/shift_reg.png)
+
+\*: The diagrams show separate data and instruction memory, which is accurate in the sense that addresses are calculated separately internally, but the MMU is set up to allow access to the instruction memory through data pointers as long as the instruction pointer is not valid. To make this work in practice the CPU asks the MMU if the instruction in the memory stage of the pipeline is trying to read from instruction memory, and if it is then we stall the fetch stage for a cycle. We could use dual-ported instruction memory instead, but that requires more area.
 
 
 ## Hazard Unit
