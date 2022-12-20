@@ -1,31 +1,43 @@
 [*]
 [*] GTKWave Analyzer v3.3.113 (w)1999-2022 BSI
-[*] Mon Dec 19 10:05:25 2022
+[*] Tue Dec 20 16:47:13 2022
 [*]
 [dumpfile] "/home/declan/work/src/github.com/pietroglyph/pipelined-rv32i/rv32i_system.fst"
-[dumpfile_mtime] "Mon Dec 19 10:03:52 2022"
-[dumpfile_size] 14611
+[dumpfile_mtime] "Tue Dec 20 16:41:33 2022"
+[dumpfile_size] 16502
 [savefile] "/home/declan/work/src/github.com/pietroglyph/pipelined-rv32i/tests/rv32i_system.gtkw"
-[timestart] 0
+[timestart] 64170
 [size] 1920 1080
 [pos] -1 -1
-*-15.274161 25000 775000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-14.274161 150000 775000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] test_rv32i_system.
 [treeopen] test_rv32i_system.UUT.
 [treeopen] test_rv32i_system.UUT.CORE.
 [treeopen] test_rv32i_system.UUT.MMU.
 [sst_width] 312
-[signals_width] 299
+[signals_width] 356
 [sst_expanded] 1
 [sst_vpaned_height] 369
 @28
 test_rv32i_system.UUT.CORE.rst
+@29
 test_rv32i_system.UUT.CORE.clk
 @24
 test_rv32i_system.UUT.CORE.instructions_completed[31:0]
 test_rv32i_system.UUT.CORE.pc_f[31:0]
 test_rv32i_system.UUT.CORE.pc_d[31:0]
 test_rv32i_system.UUT.CORE.pc_e[31:0]
+@200
+-
+@4022
+^>1 /home/declan/work/src/github.com/pietroglyph/pipelined-rv32i/gtkwave_filter.py
+test_rv32i_system.UUT.CORE.instr_f[31:0]
+^>1 /home/declan/work/src/github.com/pietroglyph/pipelined-rv32i/gtkwave_filter.py
+test_rv32i_system.UUT.CORE.instr_d[31:0]
+^>1 /home/declan/work/src/github.com/pietroglyph/pipelined-rv32i/gtkwave_filter.py
+test_rv32i_system.UUT.CORE.instr_e[31:0]
+^>1 /home/declan/work/src/github.com/pietroglyph/pipelined-rv32i/gtkwave_filter.py
+test_rv32i_system.UUT.CORE.instr_m[31:0]
 @200
 -
 @28
@@ -36,14 +48,73 @@ test_rv32i_system.UUT.CORE.zero_funct7
 test_rv32i_system.UUT.CORE.magic_funct7
 @200
 -
+@24
+test_rv32i_system.UUT.CORE.inst_mem_addr[31:0]
+@22
+test_rv32i_system.UUT.CORE.inst_mem_rd_data[31:0]
+@28
+test_rv32i_system.UUT.MMU.inst_read_invalid
+@24
+test_rv32i_system.UUT.CORE.data_mem_addr[31:0]
+@22
+test_rv32i_system.UUT.CORE.data_mem_rd_data[31:0]
+@24
+test_rv32i_system.UUT.CORE.data_mem_wr_data[31:0]
+@28
+test_rv32i_system.UUT.CORE.data_mem_wr_ena
+@200
+-
+@c00420
+test_rv32i_system.UUT.CORE.src_a[31:0]
+@28
+(0)test_rv32i_system.UUT.CORE.src_a[31:0]
+(1)test_rv32i_system.UUT.CORE.src_a[31:0]
+(2)test_rv32i_system.UUT.CORE.src_a[31:0]
+(3)test_rv32i_system.UUT.CORE.src_a[31:0]
+(4)test_rv32i_system.UUT.CORE.src_a[31:0]
+(5)test_rv32i_system.UUT.CORE.src_a[31:0]
+(6)test_rv32i_system.UUT.CORE.src_a[31:0]
+(7)test_rv32i_system.UUT.CORE.src_a[31:0]
+(8)test_rv32i_system.UUT.CORE.src_a[31:0]
+(9)test_rv32i_system.UUT.CORE.src_a[31:0]
+(10)test_rv32i_system.UUT.CORE.src_a[31:0]
+(11)test_rv32i_system.UUT.CORE.src_a[31:0]
+(12)test_rv32i_system.UUT.CORE.src_a[31:0]
+(13)test_rv32i_system.UUT.CORE.src_a[31:0]
+(14)test_rv32i_system.UUT.CORE.src_a[31:0]
+(15)test_rv32i_system.UUT.CORE.src_a[31:0]
+(16)test_rv32i_system.UUT.CORE.src_a[31:0]
+(17)test_rv32i_system.UUT.CORE.src_a[31:0]
+(18)test_rv32i_system.UUT.CORE.src_a[31:0]
+(19)test_rv32i_system.UUT.CORE.src_a[31:0]
+(20)test_rv32i_system.UUT.CORE.src_a[31:0]
+(21)test_rv32i_system.UUT.CORE.src_a[31:0]
+(22)test_rv32i_system.UUT.CORE.src_a[31:0]
+(23)test_rv32i_system.UUT.CORE.src_a[31:0]
+(24)test_rv32i_system.UUT.CORE.src_a[31:0]
+(25)test_rv32i_system.UUT.CORE.src_a[31:0]
+(26)test_rv32i_system.UUT.CORE.src_a[31:0]
+(27)test_rv32i_system.UUT.CORE.src_a[31:0]
+(28)test_rv32i_system.UUT.CORE.src_a[31:0]
+(29)test_rv32i_system.UUT.CORE.src_a[31:0]
+(30)test_rv32i_system.UUT.CORE.src_a[31:0]
+(31)test_rv32i_system.UUT.CORE.src_a[31:0]
+@1401200
+-group_end
+@420
+test_rv32i_system.UUT.CORE.src_b[31:0]
+@200
+-
 @28
 test_rv32i_system.UUT.CORE.lw_stall
 test_rv32i_system.UUT.CORE.stall_d
 test_rv32i_system.UUT.CORE.stall_f
-@29
+@2028
+^1 /home/declan/work/src/github.com/pietroglyph/pipelined-rv32i/tests/rv32i_alu_forwarding_src.txt
 test_rv32i_system.UUT.CORE.forward_src_a_e[1:0]
-@28
+^1 /home/declan/work/src/github.com/pietroglyph/pipelined-rv32i/tests/rv32i_alu_forwarding_src.txt
 test_rv32i_system.UUT.CORE.forward_src_b_e[1:0]
+@28
 test_rv32i_system.UUT.CORE.flush_d
 test_rv32i_system.UUT.CORE.flush_e
 @200
@@ -55,10 +126,14 @@ test_rv32i_system.UUT.CORE.reg_write_m
 test_rv32i_system.UUT.CORE.reg_write_w
 @200
 -
-@28
+@2028
+^2 /home/declan/work/src/github.com/pietroglyph/pipelined-rv32i/tests/rv32i_result_src.txt
 test_rv32i_system.UUT.CORE.result_src_d[1:0]
+^2 /home/declan/work/src/github.com/pietroglyph/pipelined-rv32i/tests/rv32i_result_src.txt
 test_rv32i_system.UUT.CORE.result_src_e[1:0]
+^2 /home/declan/work/src/github.com/pietroglyph/pipelined-rv32i/tests/rv32i_result_src.txt
 test_rv32i_system.UUT.CORE.result_src_m[1:0]
+^2 /home/declan/work/src/github.com/pietroglyph/pipelined-rv32i/tests/rv32i_result_src.txt
 test_rv32i_system.UUT.CORE.result_src_w[1:0]
 @200
 -
@@ -68,17 +143,64 @@ test_rv32i_system.UUT.CORE.mem_write_e
 test_rv32i_system.UUT.CORE.mem_write_m
 @200
 -
-@22
+@24
+test_rv32i_system.UUT.CORE.alu_result_e[31:0]
+@c00024
+test_rv32i_system.UUT.CORE.alu_result_m[31:0]
+@28
+(0)test_rv32i_system.UUT.CORE.alu_result_m[31:0]
+(1)test_rv32i_system.UUT.CORE.alu_result_m[31:0]
+(2)test_rv32i_system.UUT.CORE.alu_result_m[31:0]
+(3)test_rv32i_system.UUT.CORE.alu_result_m[31:0]
+(4)test_rv32i_system.UUT.CORE.alu_result_m[31:0]
+(5)test_rv32i_system.UUT.CORE.alu_result_m[31:0]
+(6)test_rv32i_system.UUT.CORE.alu_result_m[31:0]
+(7)test_rv32i_system.UUT.CORE.alu_result_m[31:0]
+(8)test_rv32i_system.UUT.CORE.alu_result_m[31:0]
+(9)test_rv32i_system.UUT.CORE.alu_result_m[31:0]
+(10)test_rv32i_system.UUT.CORE.alu_result_m[31:0]
+(11)test_rv32i_system.UUT.CORE.alu_result_m[31:0]
+(12)test_rv32i_system.UUT.CORE.alu_result_m[31:0]
+(13)test_rv32i_system.UUT.CORE.alu_result_m[31:0]
+(14)test_rv32i_system.UUT.CORE.alu_result_m[31:0]
+(15)test_rv32i_system.UUT.CORE.alu_result_m[31:0]
+(16)test_rv32i_system.UUT.CORE.alu_result_m[31:0]
+(17)test_rv32i_system.UUT.CORE.alu_result_m[31:0]
+(18)test_rv32i_system.UUT.CORE.alu_result_m[31:0]
+(19)test_rv32i_system.UUT.CORE.alu_result_m[31:0]
+(20)test_rv32i_system.UUT.CORE.alu_result_m[31:0]
+(21)test_rv32i_system.UUT.CORE.alu_result_m[31:0]
+(22)test_rv32i_system.UUT.CORE.alu_result_m[31:0]
+(23)test_rv32i_system.UUT.CORE.alu_result_m[31:0]
+(24)test_rv32i_system.UUT.CORE.alu_result_m[31:0]
+(25)test_rv32i_system.UUT.CORE.alu_result_m[31:0]
+(26)test_rv32i_system.UUT.CORE.alu_result_m[31:0]
+(27)test_rv32i_system.UUT.CORE.alu_result_m[31:0]
+(28)test_rv32i_system.UUT.CORE.alu_result_m[31:0]
+(29)test_rv32i_system.UUT.CORE.alu_result_m[31:0]
+(30)test_rv32i_system.UUT.CORE.alu_result_m[31:0]
+(31)test_rv32i_system.UUT.CORE.alu_result_m[31:0]
+@1401200
+-group_end
+@24
+test_rv32i_system.UUT.CORE.alu_result_w[31:0]
+@200
+-
+@2028
+^3 /home/declan/work/src/github.com/pietroglyph/pipelined-rv32i/tests/rv32i_alu_control.txt
 test_rv32i_system.UUT.CORE.alu_control_d[3:0]
+^3 /home/declan/work/src/github.com/pietroglyph/pipelined-rv32i/tests/rv32i_alu_control.txt
 test_rv32i_system.UUT.CORE.alu_control_e[3:0]
 @200
 -
-@28
+@2028
+^4 /home/declan/work/src/github.com/pietroglyph/pipelined-rv32i/tests/rv32i_alu_src.txt
 test_rv32i_system.UUT.CORE.alu_src_d
+^4 /home/declan/work/src/github.com/pietroglyph/pipelined-rv32i/tests/rv32i_alu_src.txt
 test_rv32i_system.UUT.CORE.alu_src_e
 @200
 -
-@24
+@22
 test_rv32i_system.UUT.CORE.rd1_d[31:0]
 test_rv32i_system.UUT.CORE.rd1_e[31:0]
 test_rv32i_system.UUT.CORE.rd2_d[31:0]

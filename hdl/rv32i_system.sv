@@ -52,14 +52,15 @@ MMCME2_BASE_inst (
 
 `endif // SIMULATION
 
-wire core_mem_wr_ena;
-wire [31:0] core_mem_addr, core_mem_wr_data, core_mem_rd_data, core_pc;
+wire core_mem_wr_ena, is_inst_addr;
+wire [31:0] core_mem_addr, core_mem_wr_data, core_mem_rd_data, inst_mem_addr, inst_mem_rd_data, core_pc;
 wire [31:0] instructions_completed;
 
 rv32i_pipelined_core CORE (
   .clk(clk), .rst(rst), .ena(1'b1),
-  .inst_mem_addr(core_mem_addr), .inst_mem_rd_data(core_mem_rd_data),
-  .data_mem_addr(data_mem_addr), .data_mem_wr_data(data_mem_wr_data), .data_mem_rd_data(data_mem_rd_data), .data_mem_wr_ena(data_mem_wr_ena),
+  .inst_mem_addr(inst_mem_addr), .inst_mem_rd_data(inst_mem_rd_data),
+  .data_mem_addr(core_mem_addr), .data_mem_wr_data(core_mem_wr_data), .data_mem_rd_data(core_mem_rd_data), .data_mem_wr_ena(core_mem_wr_ena),
+  .is_inst_addr(is_inst_addr),
   .PC(core_pc), .instructions_completed(instructions_completed)
 );
 
@@ -72,18 +73,6 @@ end
 `define INITIAL_INST_MEM "mem/zeros.memh"
 `endif // INITIAL_INST_MEM
 
-// FIXME: having two of these is problematic and breaks the memmapped register
-// bits of the MMU; I should just add more ports to the MMU
-logic [31:0] data_mem_addr, data_mem_rd_data, data_mem_wr_data;
-wire data_mem_wr_ena;
-distributed_ram DATA_MEMORY(
-	.clk(clk),
-	.wr_ena(data_mem_wr_ena),
-	.addr(data_mem_addr),
-	.wr_data(data_mem_wr_data),
-	.rd_data(data_mem_rd_data)
-);
-
 mmu #(
   .INIT_INST(`INITIAL_INST_MEM),
   .GPIO_PINS(8)
@@ -91,6 +80,8 @@ mmu #(
   .clk(clk), .rst(rst), .core_addr(core_mem_addr),
   .core_wr_ena(core_mem_wr_ena), .core_wr_data(core_mem_wr_data),
   .core_rd_data(core_mem_rd_data),
+  .inst_addr(inst_mem_addr), .inst_rd_data(inst_mem_rd_data),
+  .bank_test_addr(core_mem_addr), .is_inst_addr(is_inst_addr),
   .leds(leds), .rgb(rgb),
   .display_rstb(display_rstb), .interface_mode(interface_mode), .backlight(backlight),
   .display_csb(display_csb), .spi_clk(spi_clk), .spi_mosi(spi_mosi), .spi_miso(spi_miso),

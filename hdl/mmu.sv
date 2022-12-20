@@ -5,7 +5,14 @@
 
 module mmu(
   clk, rst, 
+  // This doesn't actually have two inst_mem read ports... we just allow reads
+  // through core_addr if inst_addr is 0 (which currently shouldn't ever
+  // happen unless we're stalling). In the future we could add multiple ports,
+  // or stall the pipeline when reading from instruction memory via the core
+  // address.
   core_addr, core_rd_data, core_wr_ena, core_wr_data,
+  inst_addr, inst_rd_data, 
+  bank_test_addr, is_inst_addr,
   leds, rgb,
   interface_mode, backlight, display_rstb, data_commandb,
   display_csb, spi_mosi, spi_miso, spi_clk,
@@ -32,8 +39,9 @@ genvar i;
 
 input wire  clk, rst;
 input wire core_wr_ena;
-input wire [31:0] core_wr_data, core_addr;
-output logic [31:0] core_rd_data;
+input wire [31:0] core_wr_data, core_addr, inst_addr, bank_test_addr;
+output logic [31:0] core_rd_data, inst_rd_data;
+output logic is_inst_addr;
 // LEDs
 output wire [1:0] leds;
 output wire [2:0] rgb;
@@ -47,10 +55,18 @@ inout wire [GPIO_PINS-1:0] gpio_pins;
 wire [GPIO_PINS-1:0] mmr_gpio_mode, mmr_gpio_state;
 
 // Muxing/Decoding between different memory banks.
-wire [31:0] inst_rd_data, data_rd_data;
+wire [31:0] data_rd_data;
 logic [31:0] mmrs_rd_data;
 wire [31:0] periph_vram_addr;
 wire [15:0] core_vram_rd_data, periph_vram_rd_data;
+// We allow core reads and writes to instruction memory if the instruction
+// read is invalid since we don't actually have two read and write ports
+logic inst_read_invalid;
+
+always_comb begin
+	inst_read_invalid = inst_addr === 0;
+	is_inst_addr = bank_test_addr[31:28] === MMU_BANK_INST;
+end
 
 // Decoder that enables the different memory banks.
 logic [MMU_BANK_DECODER_SIZE-1:0] bank_access, bank_wr_decoder;
@@ -65,7 +81,11 @@ end endgenerate
 // Mux that pulls data from the correct memory bank.
 always_comb begin: MMU_BANK_DATA_MUX
   case(core_addr[31:28])
-    MMU_BANK_INST: core_rd_data = inst_rd_data;
+    // If a core read tries to access instruction memory at the same time as
+    // a valid instruction read then we output zeroes to make things easier to
+    // understand (this is an error state, and the CPU should probably stall
+    // the fetch stage if we try to read from instruction memory
+    MMU_BANK_INST: core_rd_data = inst_read_invalid ? inst_rd_data : 0;
     MMU_BANK_MMRS: core_rd_data = mmrs_rd_data;
     MMU_BANK_VRAM: core_rd_data = {16'd0, core_vram_rd_data};
     MMU_BANK_DATA: core_rd_data = data_rd_data;
@@ -75,8 +95,8 @@ end
 
 // Instruction Memory
 distributed_ram #(.W(32), .L(INST_L), .INIT(INIT_INST)) INST_RAM(
-  .clk(clk), .addr(core_addr[$clog2(INST_L)+1:2]), .rd_data(inst_rd_data), 
-  .wr_ena(bank_wr_decoder[MMU_BANK_INST]), .wr_data(core_wr_data)
+  .clk(clk), .addr(inst_read_invalid ? core_addr[$clog2(INST_L)+1:2] : inst_addr[$clog2(INST_L)+1:2]), .rd_data(inst_rd_data),
+  .wr_ena(inst_read_invalid & bank_wr_decoder[MMU_BANK_INST]), .wr_data(core_wr_data)
 );
 
 // Data Memory

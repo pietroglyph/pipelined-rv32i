@@ -7,29 +7,37 @@
 module rv32i_pipelined_core(
   clk, rst, ena,
   inst_mem_addr, inst_mem_rd_data, data_mem_addr, data_mem_wr_data, data_mem_rd_data, data_mem_wr_ena,
+  is_inst_addr,
   PC, instructions_completed
 );
 
 parameter PC_START_ADDRESS=0;
 
 typedef enum logic [1:0] {
-	RESULT_ALU,
+	RESULT_ALU = 0,
 	RESULT_MEM_RD,
 	RESULT_PC_PLUS_FOUR
 } result_src_t;
 typedef enum logic {
-	ALU_SRC_REG,
+	ALU_SRC_REG = 0,
 	ALU_SRC_IMM
 } alu_src_t;
 typedef enum logic [1:0] {
-	FWD_SRC_REG,
+	FWD_SRC_REG = 0,
 	FWD_SRC_ALU_FORWARDED,
 	FWD_SRC_MEM_FORWARDED
 } alu_forwarding_src_t;
 typedef enum logic {
-	PC_SRC_PLUS_FOUR,
+	PC_SRC_PLUS_FOUR = 0,
 	PC_SRC_JUMP_TARGET
 } pc_src_t;
+typedef enum logic [2:0] {
+	BRANCH_CTRL_NO_BRANCH,
+	BRANCH_CTRL_EQ,
+	BRANCH_CTRL_NE,
+	BRANCH_CTRL_LT,
+	BRANCH_CTRL_GE
+} branch_control_t;
 
 // Standard control signals.
 input  wire clk, rst, ena; // <- worry about implementing the ena signal last.
@@ -37,7 +45,8 @@ output logic [31:0] instructions_completed;
 
 // Memory interface.
 output logic [31:0] inst_mem_addr, data_mem_addr, data_mem_wr_data;
-input   wire [31:0] inst_mem_rd_data, data_mem_rd_data;
+input wire [31:0] inst_mem_rd_data, data_mem_rd_data;
+input wire is_inst_addr;
 output logic data_mem_wr_ena;
 
 // Hazard unit
@@ -63,7 +72,11 @@ always_comb begin : hazard_unit
 	// instruction in the execute stage (i.e. one that hasn't yet actually
 	// loaded the word from memory); we have to stall to fix this
 	lw_stall = result_src_e === RESULT_MEM_RD & ((rs1_d === rd_addr_e) | (rs2_d === rd_addr_e));
-	stall_f = lw_stall;
+	// We also stall the fetch stage if we're trying to write or read
+	// instruction memory; we need this because the instruction memory is
+	// not dual-ported, so we can't fetch from instruction memory and
+	// read/write to it in the memory stage at the same time
+	stall_f = lw_stall | (is_inst_addr & (result_src_m == RESULT_MEM_RD | mem_write_m));
 	stall_d = lw_stall;
 
 	// (Control hazards)	
@@ -111,7 +124,7 @@ always_comb begin : fetch_datapath
 		PC_SRC_JUMP_TARGET: pc_next_f = pc_target_e;
 	endcase
 
-	inst_mem_addr = pc_f;
+	inst_mem_addr = stall_f ? 0 : pc_f;
 	instr_f = inst_mem_rd_data;
 end
 
@@ -122,7 +135,8 @@ logic [4:0] rs1_d, rs2_d, rd_addr_d;
 logic [31:0] instr_d, pc_d, imm_ext_d, pc_plus_4_d;
 
 // Control registers
-logic reg_write_d, mem_write_d, jump_d, branch_d;
+logic reg_write_d, mem_write_d, jump_d;
+branch_control_t branch_control_d;
 result_src_t result_src_d;
 alu_control_t alu_control_d;
 alu_src_t alu_src_d;
@@ -138,12 +152,15 @@ always_ff @(posedge clk) begin : decode_to_execute_reg
 		rd_addr_e <= 0;
 		imm_ext_e <= 0;
 		pc_plus_4_e <= 0;
+		`ifdef SIMULATION
+		instr_e <= 0;
+		`endif
 
 		reg_write_e <= 0;
-		result_src_e <= RESULT_MEM_RD;
+		result_src_e <= RESULT_ALU;
 		mem_write_e <= 0;
 		jump_e <= 0;
-		branch_e <= 0;
+		branch_control_e <= BRANCH_CTRL_NO_BRANCH;
 		alu_control_e <= ALU_INVALID;
 		alu_src_e <= ALU_SRC_REG;
 	end else begin
@@ -155,12 +172,15 @@ always_ff @(posedge clk) begin : decode_to_execute_reg
 		rd_addr_e <= rd_addr_d;
 		imm_ext_e <= imm_ext_d;
 		pc_plus_4_e <= pc_plus_4_d;
+		`ifdef SIMULATION
+		instr_e <= instr_d;
+		`endif
 
 		reg_write_e <= reg_write_d;
 		result_src_e <= result_src_d;
 		mem_write_e <= mem_write_d;
 		jump_e <= jump_d;
-		branch_e <= branch_d;
+		branch_control_e <= branch_control_d;
 		alu_control_e <= alu_control_d;
 		alu_src_e <= alu_src_d;
 	end
@@ -200,7 +220,7 @@ always_comb begin : decode_unit
 		// but U-type.
 		IMM_EXT_SRC_I_TYPE: case (funct3)
 			// sll and sra/srl have an effective funct7 in the
-			// immediate which we don't want.
+			// immediate that we don't want.
 			FUNCT3_SLL, FUNCT3_SHIFT_RIGHT: imm_ext_d = {27'b0, instr_d[24:20]};
 			default: imm_ext_d = {{20{instr_d[31]}}, instr_d[31:20]};
 		endcase
@@ -219,13 +239,13 @@ always_comb begin : control_unit
 
 	// Controls the register write enable
 	case (op)
-		OP_RTYPE, OP_ITYPE, OP_JAL, OP_STYPE: reg_write_d = 1'b1;
+		OP_RTYPE, OP_ITYPE, OP_JAL, OP_JALR, OP_LTYPE: reg_write_d = 1'b1;
 		default: reg_write_d = 1'b0;
 	endcase
 
 	// Controls the mux directly before the ALU's src_b input
 	case (op)
-		OP_JALR, OP_ITYPE: alu_src_d = ALU_SRC_IMM;
+		OP_JALR, OP_ITYPE, OP_STYPE, OP_LTYPE: alu_src_d = ALU_SRC_IMM;
 		OP_RTYPE, OP_BTYPE: alu_src_d = ALU_SRC_REG;
 		default: alu_src_d = ALU_SRC_REG; // Maybe have a third option that zeros things out?
 	endcase
@@ -235,7 +255,15 @@ always_comb begin : control_unit
 		OP_JAL, OP_JALR: jump_d = 1'b1;
 		default: jump_d = 1'b0;
 	endcase
-	branch_d = op === OP_BTYPE;
+	if (op === OP_BTYPE) begin
+		case (funct3)
+			FUNCT3_BEQ: branch_control_d = BRANCH_CTRL_EQ;
+			FUNCT3_BNE: branch_control_d = BRANCH_CTRL_NE;
+			FUNCT3_BLT, FUNCT3_BLTU: branch_control_d = BRANCH_CTRL_LT;
+			FUNCT3_BGE, FUNCT3_BGEU: branch_control_d = BRANCH_CTRL_GE;
+			default: branch_control_d = BRANCH_CTRL_NO_BRANCH;
+		endcase
+	end else branch_control_d = BRANCH_CTRL_NO_BRANCH;
 
 	// Controls the result mux
 	case (op)
@@ -252,7 +280,7 @@ always_comb begin : control_unit
 	magic_funct7 = funct7 === 7'b0100000;
 	zero_funct7 = funct7 === 7'b0;
 	case (op)
-		OP_JAL, OP_JALR: alu_control_d = ALU_ADD;
+		OP_STYPE, OP_LTYPE, OP_JAL, OP_JALR: alu_control_d = ALU_ADD;
 		OP_RTYPE, OP_ITYPE: case (funct3)
 			FUNCT3_ADD: begin
 				if (op === OP_ITYPE | zero_funct7) alu_control_d = ALU_ADD;
@@ -286,13 +314,17 @@ end
 
 // [Execute]
 // Data registers
-logic [31:0] rd1_e, rd2_e, pc_e;
+logic [31:0] rd1_e, rd2_e, pc_e, src_a, src_b;
 logic [4:0] rs1_e, rs2_e, rd_addr_e;
-logic [31:0] imm_ext_e, pc_target_e, pc_plus_4_e, write_data_e;
-wire [31:0] alu_result_e;
+logic [31:0] alu_result_e, imm_ext_e, pc_target_e, pc_plus_4_e, write_data_e;
+`ifdef SIMULATION
+logic [31:0] instr_e; // useful for debugging
+`endif
 
 // Control registers
-logic reg_write_e, mem_write_e, jump_e, branch_e;
+wire overflow_e, zero_e, equal_e;
+logic reg_write_e, mem_write_e, jump_e;
+branch_control_t branch_control_e;
 result_src_t result_src_e;
 alu_control_t alu_control_e;
 alu_src_t alu_src_e;
@@ -305,6 +337,9 @@ always_ff @(posedge clk) begin : execute_to_memory_reg
 		alu_result_m <= 0;
 		write_data_m <= 0;
 		rd_addr_m <= 0;
+		`ifdef SIMULATION
+		instr_m <= 0;
+		`endif
 
 		reg_write_m <= 0;
 		result_src_e <= RESULT_ALU;
@@ -314,6 +349,9 @@ always_ff @(posedge clk) begin : execute_to_memory_reg
 		write_data_m <= write_data_e;
 		rd_addr_m <= rd_addr_e;
 		pc_plus_4_m <= pc_plus_4_e;
+		`ifdef SIMULATION
+		instr_m <= instr_e;
+		`endif
 
 		reg_write_m <= reg_write_e;
 		result_src_m <= result_src_e;
@@ -343,13 +381,20 @@ always_comb begin : execute_datapath
 		default: src_b = 32'b0;
 	endcase
 
-	pc_src_e = (jump_e | (branch_e & zero_e)) === 1'b1 ? PC_SRC_JUMP_TARGET : PC_SRC_PLUS_FOUR;
+	// I regret making this an enum...
+	`define pc_src_t_cast(val) (val) === 0 ? PC_SRC_PLUS_FOUR : PC_SRC_JUMP_TARGET
+	case (branch_control_e)
+		BRANCH_CTRL_NO_BRANCH: pc_src_e = `pc_src_t_cast(jump_e);
+		BRANCH_CTRL_EQ: pc_src_e = `pc_src_t_cast(equal_e);
+		BRANCH_CTRL_NE: pc_src_e = `pc_src_t_cast(~equal_e);
+		BRANCH_CTRL_LT: pc_src_e = `pc_src_t_cast(alu_result_e[0]);
+		BRANCH_CTRL_GE: pc_src_e = `pc_src_t_cast(equal_e | ~alu_result_e[0]);
+		default: pc_src_e = PC_SRC_PLUS_FOUR;
+	endcase
 
 	pc_target_e = pc_e + imm_ext_e;	
 end
 
-logic [31:0] src_a, src_b;
-wire overflow_e, zero_e, equal_e;
 alu_behavioural ALU (
   .a(src_a), .b(src_b), .result(alu_result_e),
   .control(alu_control_e),
@@ -363,6 +408,9 @@ result_src_t result_src_m;
 
 // Data registers
 logic [31:0] alu_result_m, write_data_m, read_result_m, pc_plus_4_m;
+`ifdef SIMULATION
+logic [31:0] instr_m;
+`endif
 logic [4:0] rd_addr_m;
 
 always_ff @(posedge clk) begin : memory_to_writeback_reg
@@ -390,6 +438,7 @@ always_comb begin : memory_datapath
 	data_mem_addr = alu_result_m;
 	data_mem_wr_data = write_data_m;
 	data_mem_wr_ena = mem_write_m;
+	read_result_m = data_mem_rd_data;
 end
 
 // [Writeback]
