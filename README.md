@@ -49,3 +49,6 @@ The hazard unit gets connected to most parts of the CPU, with some inputs from t
 ## Performance Analysis
 Ideally this processor would have 1 cycle per instruction (CPI), since we issue (i.e. fetch) an instruction every cycle. However, a flush or stall wastes one to two cycles, so the CPI depends on the program being executed. This means that we get less than a 5x speedup. We also have to add a lot more hardware, including: four wiiiiide registers between pipelines of varying length (128 bits minimum), a hazard unit which includes a few comparators and many muxes, a few new control signals in the control unit, and two forwarding multiplexers. Here's a timing diagram of a single-cycle and pipelined processor:
 ![Timing diagram of the single-cycle and pipelined processor](docs/timing_diagram.png)
+
+## Acknowledgements
+Above diagrams are from Harris and Harris (2020). Assembler script and visualization and debugging scripts written by Avinash Uttamchandani.
