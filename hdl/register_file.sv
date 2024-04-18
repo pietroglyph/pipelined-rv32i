@@ -115,70 +115,10 @@ always_comb begin : read_mux1
   endcase
 end
 
-// Need 1x write enable decoder 
-
-`ifdef TRUTH_TABLE_DECODER
-
-// Here's a truth table approach
-always_comb begin : write_enable_decoder_truth_table
-  if(wr_ena) begin
-    case (wr_addr)
-      // Very lazy pythonic way of making a decoder truth table
-      // python: print("\n".join(["5'd%02d : wr_enas = 32'd%d;"%(i, 1 << i) for i in range(0,32)]))
-      5'd00 : wr_enas = 32'd1;
-      5'd01 : wr_enas = 32'd2;
-      5'd02 : wr_enas = 32'd4;
-      5'd03 : wr_enas = 32'd8;
-      5'd04 : wr_enas = 32'd16;
-      5'd05 : wr_enas = 32'd32;
-      5'd06 : wr_enas = 32'd64;
-      5'd07 : wr_enas = 32'd128;
-      5'd08 : wr_enas = 32'd256;
-      5'd09 : wr_enas = 32'd512;
-      5'd10 : wr_enas = 32'd1024;
-      5'd11 : wr_enas = 32'd2048;
-      5'd12 : wr_enas = 32'd4096;
-      5'd13 : wr_enas = 32'd8192;
-      5'd14 : wr_enas = 32'd16384;
-      5'd15 : wr_enas = 32'd32768;
-      5'd16 : wr_enas = 32'd65536;
-      5'd17 : wr_enas = 32'd131072;
-      5'd18 : wr_enas = 32'd262144;
-      5'd19 : wr_enas = 32'd524288;
-      5'd20 : wr_enas = 32'd1048576;
-      5'd21 : wr_enas = 32'd2097152;
-      5'd22 : wr_enas = 32'd4194304;
-      5'd23 : wr_enas = 32'd8388608;
-      5'd24 : wr_enas = 32'd16777216;
-      5'd25 : wr_enas = 32'd33554432;
-      5'd26 : wr_enas = 32'd67108864;
-      5'd27 : wr_enas = 32'd134217728;
-      5'd28 : wr_enas = 32'd268435456;
-      5'd29 : wr_enas = 32'd536870912;
-      5'd30 : wr_enas = 32'd1073741824;
-      5'd31 : wr_enas = 32'd2147483648;
-    endcase
-  end
-  else begin 
-    wr_enas = 32'b0;
-  end
-end
-`endif // TRUTH_TABLE_DECODER
-
-`ifdef BEHAVIOURAL_SHIFTER_DECODER
 // This is a more typical behavioural decoder implementation, but the shift operator makes it non-obvious which way it will be synthesized (a full shifter is usually bigger than a 5:32 decoder)
 always_comb begin : write_enable_decoder_shifter
   wr_enas = wr_ena ? (32'b1 << wr_addr) : 32'b0;
 end
-`endif // BEHAVIOURAL_SHIFTER_DECODER
-
-`define STRUCTURAL_DECODER
-`ifdef STRUCTURAL_DECODER
-decoder_5_to_32 WR_ENA_DECODER(.ena(wr_ena), .in(wr_addr), .out(wr_enas));
-`endif //STRUCTURAL_DECODER
-
-
-
 
 // instantiate registers:
 // python: print("\n".join(["register_neg #(.N(32)) r_x%02d(.clk(clk), .rst(1'b0), .q(x%02d), .d(wr_data), .ena(wr_enas[%02d]));"%(i,i,i) for i in range(1,32)]))

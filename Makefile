@@ -4,7 +4,7 @@ VVP=vvp
 VVP_POST=-fst
 VIVADO=vivado -mode batch -source
 
-RFILE_SRCS=hdl/register_file.sv hdl/register.sv hdl/register_neg.sv hdl/decoder*.sv
+RFILE_SRCS=hdl/register_file.sv hdl/register.sv hdl/register_neg.sv
 # If you are using your own ALU files you should add them here:
 ALU_SRCS=hdl/alu_behavioural.sv hdl/alu_types.sv
 PERIPHERAL_SRCS=hdl/ili9341_display_peripheral.sv hdl/ili9341_defines.sv hdl/spi_controller.sv hdl/spi_types.sv hdl/pwm.sv hdl/pulse_generator.sv
