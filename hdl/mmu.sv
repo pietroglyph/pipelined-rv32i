@@ -2,6 +2,7 @@
 `default_nettype none
 
 `include "memmap.sv"
+`include "ili9341_defines.sv"
 
 module mmu(
   clk, rst, 
@@ -132,7 +133,7 @@ ili9341_display_peripheral #(
   .spi_csb(display_csb), .spi_clk(spi_clk), .spi_mosi(spi_mosi), .spi_miso(spi_miso),
   .data_commandb(data_commandb),
   .vram_rd_addr(periph_vram_addr),
-  .vram_rd_data(periph_vram_rd_data[15:0]),
+  .vram_rd_data(ILI9341_color_t'(periph_vram_rd_data[15:0])),
   .enable_test_pattern(1'b0) // TODO(avinash) have an MMR control this.
 );
 

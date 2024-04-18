@@ -4,7 +4,7 @@
 # Note - you can add `start_gui` between any of these commands to interject into the Vivado environment. This lets you use any tools (and you can open any checkpoint too!).
 
 # Set this to the memh file you'd like to use to synthesize. Be sure to update the Makefile dependency too.
-set_property verilog_define INITIAL_INST_MEM="asm/peripherals.memh" [current_fileset]
+set_property verilog_define INITIAL_INST_MEM="asm/peripherals_leds.memh" [current_fileset]
 read_verilog [ glob hdl/*.sv ]
 read_xdc ./rv32i_system.xdc
 

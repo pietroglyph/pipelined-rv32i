@@ -28,9 +28,10 @@ output wire display_csb, spi_clk, spi_mosi;
 input wire spi_miso;
 
 // GPIO
-inout [7:0] gpio;
+inout wire [7:0] gpio;
 
-`ifdef SIMULATION
+// Vivado can simulate MMCME2_BASE but Icarus can't
+`ifdef __ICARUS__
 assign clk = sysclk;
 `else 
 wire clk_feedback;

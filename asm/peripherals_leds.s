@@ -48,6 +48,10 @@ MAIN:
   call SET_RGB
   addi a0, zero, 1000
   call DELAY
+  # Play 500 Hz tone for 1 s
+  addi a0, zero, 2
+  addi a1, zero, 500
+  call PLAY_TONE
   
   # Toggle LED0
   call SET_LED0
@@ -98,4 +102,17 @@ SET_RGB: # void SET_RGB(red, green, blue)
   slli t1, t1, 8
   or t1, t1, a2
   sw t1, 0(t0)
+  ret
+
+PLAY_TONE: # void PLAY_TONE(period_ms, num_iterations)
+  addi t4, zero, 0 # Iteration counter
+  addi t5, zero, 0xFF # To enable all pins
+  addi t6, zero, 1 # MMR Base Address
+  slli t6, t6, 28
+  sw t5, 4(t6) # Set GPIO mode
+  PULSE_LOOP: sw t5, 8(t6) # Set high
+  call DELAY
+  sw zero, 8(t6) # Set low
+  addi t4, t4, 1
+  blt t4, a1, PULSE_LOOP
   ret

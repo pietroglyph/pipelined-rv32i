@@ -7,6 +7,11 @@
 # Note - need to update this based on the size of DATA_MEM.
 # Assuming DATA_L is 256 words, or 1024 bytes. Subtract 4 to get the highest address in the system.
 # 
+
+addi a0, zero, 2
+addi a1, zero, 2
+bge a0, a1, DONE
+
 addi sp, zero, 3
 slli sp, sp, 28
 addi sp, sp, 1020 

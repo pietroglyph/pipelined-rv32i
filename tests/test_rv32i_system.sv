@@ -47,9 +47,12 @@ initial begin
   
   $display("Ran %d cycles, finishing.", `MAX_CYCLES);
 
+  // Vivado doesn't seem to support calling tasks in other modules :(
+  `ifndef XILINX_SIMULATOR
   UUT.MMU.dump_memory("mmu");
 
   UUT.CORE.REGISTER_FILE.print_state();
+  `endif
 
   $finish;
 end

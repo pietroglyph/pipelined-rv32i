@@ -32,15 +32,20 @@ typedef enum logic {
 	PC_SRC_JUMP_TARGET
 } pc_src_t;
 typedef enum logic [2:0] {
-	BRANCH_CTRL_NO_BRANCH,
+	BRANCH_CTRL_NO_BRANCH = 0,
 	BRANCH_CTRL_EQ,
 	BRANCH_CTRL_NE,
 	BRANCH_CTRL_LT,
 	BRANCH_CTRL_GE
 } branch_control_t;
+typedef enum logic [1:0] {
+	JUMP_SRC_RD1 = 0,
+	JUMP_SRC_PC,
+	JUMP_NONE
+} jump_offset_source_t;
 
 // Standard control signals.
-input  wire clk, rst, ena; // <- worry about implementing the ena signal last.
+input  wire clk, rst, ena;
 output logic [31:0] instructions_completed;
 
 // Memory interface.
@@ -140,6 +145,7 @@ branch_control_t branch_control_d;
 result_src_t result_src_d;
 alu_control_t alu_control_d;
 alu_src_t alu_src_d;
+jump_offset_source_t jump_offset_src_d;
 logic stall_d, flush_d;
 
 always_ff @(posedge clk) begin : decode_to_execute_reg
@@ -159,7 +165,7 @@ always_ff @(posedge clk) begin : decode_to_execute_reg
 		reg_write_e <= 0;
 		result_src_e <= RESULT_ALU;
 		mem_write_e <= 0;
-		jump_e <= 0;
+		jump_offset_src_e <= JUMP_NONE;
 		branch_control_e <= BRANCH_CTRL_NO_BRANCH;
 		alu_control_e <= ALU_INVALID;
 		alu_src_e <= ALU_SRC_REG;
@@ -179,7 +185,7 @@ always_ff @(posedge clk) begin : decode_to_execute_reg
 		reg_write_e <= reg_write_d;
 		result_src_e <= result_src_d;
 		mem_write_e <= mem_write_d;
-		jump_e <= jump_d;
+		jump_offset_src_e <= jump_offset_src_d;
 		branch_control_e <= branch_control_d;
 		alu_control_e <= alu_control_d;
 		alu_src_e <= alu_src_d;
@@ -252,8 +258,9 @@ always_comb begin : control_unit
 
 	// Controls the mux before the program counter
 	case (op)
-		OP_JAL, OP_JALR: jump_d = 1'b1;
-		default: jump_d = 1'b0;
+		OP_JALR: jump_offset_src_d = JUMP_SRC_RD1;
+		OP_JAL, OP_BTYPE: jump_offset_src_d = JUMP_SRC_PC;
+		default: jump_offset_src_d = JUMP_NONE;
 	endcase
 	if (op === OP_BTYPE) begin
 		case (funct3)
@@ -315,6 +322,7 @@ end
 // [Execute]
 // Data registers
 logic [31:0] rd1_e, rd2_e, pc_e, src_a, src_b;
+logic signed [31:0] jump_offset_e;
 logic [4:0] rs1_e, rs2_e, rd_addr_e;
 logic [31:0] alu_result_e, imm_ext_e, pc_target_e, pc_plus_4_e, write_data_e;
 `ifdef SIMULATION
@@ -323,13 +331,14 @@ logic [31:0] instr_e; // useful for debugging
 
 // Control registers
 wire overflow_e, zero_e, equal_e;
-logic reg_write_e, mem_write_e, jump_e;
+logic reg_write_e, mem_write_e;
 branch_control_t branch_control_e;
 result_src_t result_src_e;
 alu_control_t alu_control_e;
 alu_src_t alu_src_e;
 alu_forwarding_src_t forward_src_a_e, forward_src_b_e;
 pc_src_t pc_src_e;
+jump_offset_source_t jump_offset_src_e;
 logic flush_e;
 
 always_ff @(posedge clk) begin : execute_to_memory_reg
@@ -342,7 +351,7 @@ always_ff @(posedge clk) begin : execute_to_memory_reg
 		`endif
 
 		reg_write_m <= 0;
-		result_src_e <= RESULT_ALU;
+		result_src_m <= RESULT_ALU;
 		mem_write_m <= 0;
 	end else begin
 		alu_result_m <= alu_result_e;
@@ -365,34 +374,39 @@ always_comb begin : execute_datapath
 		FWD_SRC_REG: src_a = rd1_e;
 		FWD_SRC_ALU_FORWARDED: src_a = alu_result_m;
 		FWD_SRC_MEM_FORWARDED: src_a = result_w;
-		default: src_a = 32'b0;
+		default: src_a = '0;
 	endcase
 
 	case (forward_src_b_e)
 		FWD_SRC_REG: write_data_e = rd2_e;
 		FWD_SRC_ALU_FORWARDED: write_data_e = alu_result_m;
 		FWD_SRC_MEM_FORWARDED: write_data_e = result_w;
-		default: write_data_e = 32'b0;
+		default: write_data_e = '0;
 	endcase
 
 	case (alu_src_e)
 		ALU_SRC_REG: src_b = write_data_e;
 		ALU_SRC_IMM: src_b = imm_ext_e;
-		default: src_b = 32'b0;
+		default: src_b = '0;
 	endcase
 
 	// I regret making this an enum...
-	`define pc_src_t_cast(val) (val) === 0 ? PC_SRC_PLUS_FOUR : PC_SRC_JUMP_TARGET
+	`define pc_src_t_cast(val) if (val) pc_src_e = PC_SRC_JUMP_TARGET; else pc_src_e = PC_SRC_PLUS_FOUR; //((val) === 0) ? PC_SRC_PLUS_FOUR : PC_SRC_JUMP_TARGET
 	case (branch_control_e)
-		BRANCH_CTRL_NO_BRANCH: pc_src_e = `pc_src_t_cast(jump_e);
-		BRANCH_CTRL_EQ: pc_src_e = `pc_src_t_cast(equal_e);
-		BRANCH_CTRL_NE: pc_src_e = `pc_src_t_cast(~equal_e);
-		BRANCH_CTRL_LT: pc_src_e = `pc_src_t_cast(alu_result_e[0]);
-		BRANCH_CTRL_GE: pc_src_e = `pc_src_t_cast(equal_e | ~alu_result_e[0]);
+		BRANCH_CTRL_NO_BRANCH: `pc_src_t_cast(jump_offset_src_e != JUMP_NONE)
+		BRANCH_CTRL_EQ: `pc_src_t_cast(equal_e)//pc_src_e = equal_e === 0 ? PC_SRC_PLUS_FOUR : PC_SRC_JUMP_TARGET;
+		BRANCH_CTRL_NE: `pc_src_t_cast(~equal_e)//if (equal_e) pc_src_e = PC_SRC_PLUS_FOUR; else pc_src_e = PC_SRC_JUMP_TARGET;//pc_src_e = equal_e === 1 ? PC_SRC_PLUS_FOUR : PC_SRC_JUMP_TARGET;//`pc_src_t_cast(~equal_e);
+		BRANCH_CTRL_LT: `pc_src_t_cast(alu_result_e[0])//pc_src_e = alu_result_e[0] === 0 ? PC_SRC_PLUS_FOUR : PC_SRC_JUMP_TARGET;
+		BRANCH_CTRL_GE: `pc_src_t_cast(equal_e | ~alu_result_e[0])//pc_src_e = (equal_e | ~alu_result_e[0]) === 0 ? PC_SRC_PLUS_FOUR : PC_SRC_JUMP_TARGET;
 		default: pc_src_e = PC_SRC_PLUS_FOUR;
 	endcase
 
-	pc_target_e = pc_e + imm_ext_e;	
+	case (jump_offset_src_e)
+		JUMP_SRC_RD1: jump_offset_e = rd1_e;
+		JUMP_SRC_PC: jump_offset_e = pc_e;
+		default: jump_offset_e = '0;
+	endcase
+	pc_target_e = jump_offset_e + imm_ext_e;	
 end
 
 alu_behavioural ALU (
@@ -431,6 +445,9 @@ always_ff @(posedge clk) begin : memory_to_writeback_reg
 		reg_write_w <= reg_write_m;
 		result_src_w <= result_src_m;
 	end
+	`ifdef SIMULATION
+	if (instr_m === 32'h00000063) $stop();
+	`endif
 end
 
 // Combinational logic

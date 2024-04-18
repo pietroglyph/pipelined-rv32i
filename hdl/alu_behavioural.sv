@@ -24,7 +24,7 @@ always_comb begin : behavioural_alu_logic
   unsigned_b = b;
   {carry_out, sum} = a + b;
   difference = a - b;
-  case (control) // This is how you make  a MUX.
+  case (control)
     ALU_AND: result = a & b;
     ALU_OR : result = a | b;
     ALU_XOR : result = a ^ b;
